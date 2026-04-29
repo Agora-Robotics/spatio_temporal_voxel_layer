@@ -376,15 +376,18 @@ void SpatioTemporalVoxelLayer::LaserScanCallback(
   // laser scan where infinity is invalid callback function
   sensor_msgs::msg::PointCloud2 cloud;
   cloud.header = message->header;
-  try {
-    _laser_projector.transformLaserScanToPointCloud(
-      message->header.frame_id, *message, cloud, *tf_);
-  } catch (tf2::TransformException & ex) {
-    RCLCPP_WARN(
-      logger_,
-      "TF returned a transform exception to frame %s: %s",
-      _global_frame.c_str(), ex.what());
-    _laser_projector.projectLaser(*message, cloud);
+  {
+    std::lock_guard<std::mutex> lock(_laser_projector_mutex);
+    try {
+      _laser_projector.transformLaserScanToPointCloud(
+        message->header.frame_id, *message, cloud, *tf_);
+    } catch (tf2::TransformException & ex) {
+      RCLCPP_WARN(
+        logger_,
+        "TF returned a transform exception to frame %s: %s",
+        _global_frame.c_str(), ex.what());
+      _laser_projector.projectLaser(*message, cloud);
+    }
   }
   // buffer the point cloud
   buffer->Lock();
@@ -412,15 +415,18 @@ void SpatioTemporalVoxelLayer::LaserScanValidInfCallback(
   }
   sensor_msgs::msg::PointCloud2 cloud;
   cloud.header = message.header;
-  try {
-    _laser_projector.transformLaserScanToPointCloud(
-      message.header.frame_id, message, cloud, *tf_);
-  } catch (tf2::TransformException & ex) {
-    RCLCPP_WARN(
-      logger_,
-      "TF returned a transform exception to frame %s: %s",
-      _global_frame.c_str(), ex.what());
-    _laser_projector.projectLaser(message, cloud);
+  {
+    std::lock_guard<std::mutex> lock(_laser_projector_mutex);
+    try {
+      _laser_projector.transformLaserScanToPointCloud(
+        message.header.frame_id, message, cloud, *tf_);
+    } catch (tf2::TransformException & ex) {
+      RCLCPP_WARN(
+        logger_,
+        "TF returned a transform exception to frame %s: %s",
+        _global_frame.c_str(), ex.what());
+      _laser_projector.projectLaser(message, cloud);
+    }
   }
   // buffer the point cloud
   buffer->Lock();
