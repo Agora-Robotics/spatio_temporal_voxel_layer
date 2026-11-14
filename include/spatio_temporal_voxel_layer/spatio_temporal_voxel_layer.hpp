@@ -49,6 +49,7 @@
 #include <string>
 #include <iostream>
 #include <memory>
+#include <mutex>
 #include <unordered_set>
 // voxel grid
 #include "spatio_temporal_voxel_layer/spatio_temporal_voxel_grid.hpp"
@@ -167,6 +168,7 @@ private:
     dynamicParametersCallback(std::vector<rclcpp::Parameter> parameters);
 
   laser_geometry::LaserProjection _laser_projector;
+  std::mutex _laser_projector_mutex;  // guards _laser_projector (not thread-safe)
   std::vector<std::shared_ptr<message_filters::SubscriberBase<rclcpp_lifecycle::LifecycleNode>>>
     _observation_subscribers;
   std::vector<std::shared_ptr<tf2_ros::MessageFilterBase>> _observation_notifiers;
